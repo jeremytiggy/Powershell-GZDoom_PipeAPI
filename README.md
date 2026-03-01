@@ -20,3 +20,6 @@
  - parse_CMD_CVAR_GET_Response_from_GZDoom
  - parse_CMD_CVAR_SET_Response_from_GZDoom
  - parse_CMD_CONSOLE_COMMAND_Response_from_GZDoom
+
+## Versioning
+ - v1.0: Initial Release
