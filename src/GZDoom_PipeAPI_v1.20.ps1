@@ -286,10 +286,6 @@ function GZDoom_PipeAPI_CVAR_SET {
 	$cvarName = [string]$cvarName
 	$cvarValue = [string]$cvarValue
 	# Form Request String
-	# encapsulate string data with spaces in double quotes
-	if ($cvarValue.Contains(" ") -and $cvarValue -notmatch '^".*"$') {
-		$cvarValue = '"' + $cvarValue + '"'   # wrap in double quotes
-	}
 	$GZDoom_PipeAPI_SET_Request_String = $Global:GZDoom_PipeAPI_CMD_CVAR_SET_Request_Format
     $GZDoom_PipeAPI_SET_Request_String = $GZDoom_PipeAPI_SET_Request_String.Replace('cvarName', $cvarName)
     $GZDoom_PipeAPI_SET_Request_String = $GZDoom_PipeAPI_SET_Request_String.Replace('cvarValue', $cvarValue)
