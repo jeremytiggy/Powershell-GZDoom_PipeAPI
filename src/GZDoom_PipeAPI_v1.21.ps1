@@ -268,7 +268,9 @@ function GZDoom_PipeAPI_CVAR_SET {
 		$cvarValue
     )
     #Returns bool $true (remote value was updated successfully) or $false (remote value was not updated)
-	if ($Global:GZDoom_PipeAPI_Debug) { Write-Host "[GZDoom_PipeAPI_CVAR_SET]: CVAR: $($cvarName) ; Value: $($cvarValue)" }
+	if ($Global:GZDoom_PipeAPI_Debug) { 
+		Write-Host "[GZDoom_PipeAPI_CVAR_SET]: [Raw function input] CVAR: $cvarName "
+		Write-Host "[GZDoom_PipeAPI_CVAR_SET]: [Raw function input] Value: $cvarValue " }
 	# Prevent empty request
 	if ($cvarName -eq $null) { 
 		Write-Host "[GZDoom_PipeAPI_CVAR_SET]: FAULT - null cvarName" -ForegroundColor Red
@@ -285,6 +287,11 @@ function GZDoom_PipeAPI_CVAR_SET {
 	}
 	$cvarName = [string]$cvarName
 	$cvarValue = [string]$cvarValue
+	if ($Global:GZDoom_PipeAPI_Debug) { 
+		Write-Host "[GZDoom_PipeAPI_CVAR_SET]: [Function Input as String] CVAR: $cvarName "
+		Write-Host "[GZDoom_PipeAPI_CVAR_SET]: [Function Input As String] Value: $cvarValue" }
+	#keep in our back pocket, remove encapsulating doublequotes:
+	#if ($commandPart.StartsWith('"') -and $commandPart.EndsWith('"')) {$commandPart = $commandPart.Substring(1, $commandPart.Length - 2)}
 	# Form Request String
 	$GZDoom_PipeAPI_SET_Request_String = $Global:GZDoom_PipeAPI_CMD_CVAR_SET_Request_Format
     $GZDoom_PipeAPI_SET_Request_String = $GZDoom_PipeAPI_SET_Request_String.Replace('cvarName', $cvarName)
@@ -293,7 +300,7 @@ function GZDoom_PipeAPI_CVAR_SET {
     # Pull Response from Server using Request
 	$GZDoom_PipeAPI_SET_Response_String = NamedPipe_Client_PullServerData -requestString $GZDoom_PipeAPI_SET_Request_String
     $GZDoom_PipeAPI_SET_Server_Response_Available = ($GZDoom_PipeAPI_SET_Response_String.Length) -ne 0
-	if ($Global:GZDoom_PipeAPI_Debug) { Write-Host "[GZDoom_PipeAPI_CVAR_SET]: Response String: $GZDoom_PipeAPI_SET_Response_String" }
+	if ($Global:GZDoom_PipeAPI_Debug) { Write-Host "[GZDoom_PipeAPI_CVAR_SET]: [Raw] Response String: $GZDoom_PipeAPI_SET_Response_String" }
     if (-not $GZDoom_PipeAPI_SET_Server_Response_Available) {
         Write-Host "[GZDoom_PipeAPI_CVAR_SET]: FAULT - No response from GZDoom after CMD_CVAR_SET for ' $cvarName '" -ForegroundColor Red
 		Write-Host "[GZDoom_PipeAPI_CVAR_SET]: CVAR '$cvarName' value not set to '$cvarValue'." -ForegroundColor Red
@@ -354,7 +361,9 @@ function GZDoom_PipeAPI_CVAR_SET {
 			}
 			$GZDoom_SET_Response_CVAR_Name_Matches_Request = ($cvarName -eq $Global:GZDoom_PipeAPI_CMD_CVAR_SET_Name)
 			if ($GZDoom_SET_Response_CVAR_Name_Matches_Request) {
-				if ($Global:GZDoom_PipeAPI_Debug) { Write-Host "[GZDoom_PipeAPI_CVAR_SET]: Response CVAR Value: $Global:GZDoom_PipeAPI_CMD_CVAR_SET_Value_String" }
+				if ($Global:GZDoom_PipeAPI_Debug) { 
+					Write-Host "[GZDoom_PipeAPI_CVAR_SET]: Response CVAR Name: $Global:GZDoom_PipeAPI_CMD_CVAR_SET_Name"
+					Write-Host "[GZDoom_PipeAPI_CVAR_SET]: Response CVAR Value: $Global:GZDoom_PipeAPI_CMD_CVAR_SET_Value_String" }
 				$GZDoom_SET_Response_CVAR_Value_Mismatch = ($cvarValue -ne $Global:GZDoom_PipeAPI_CMD_CVAR_SET_Value_String)
 				if ($GZDoom_SET_Response_CVAR_Value_Mismatch) {
 					Write-Host "[GZDoom_PipeAPI_CVAR_SET]: WARNING - CVAR Value in response DOES NOT match CVAR Value sent!" -ForegroundColor Yellow
