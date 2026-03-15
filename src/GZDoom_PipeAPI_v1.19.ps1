@@ -6,42 +6,44 @@ function Get-LatestVersionedScript {
         [Parameter(Mandatory)]
         [string]$BaseName,
 
-        [string]$Path = "."
+        [string[]]$Path = @(".", ".\lib")
     )
 
-    Write-Verbose "Searching for latest version of $BaseName in '$Path'"
+    foreach ($currentPath in $Path) {
 
-    $pattern = "${BaseName}_v*.ps1"
+        Write-Verbose "Searching for latest version of $BaseName in '$currentPath'"
 
-    # Try versioned files first
-    $scripts = Get-ChildItem -Path $Path -Filter $pattern -File -ErrorAction SilentlyContinue
+        $pattern = "${BaseName}_v*.ps1"
 
-    if ($scripts) {
+        # Try versioned files first
+        $scripts = Get-ChildItem -Path $currentPath -Filter $pattern -File -ErrorAction SilentlyContinue
 
-        $latest = $scripts |
-            Sort-Object {
-                if ($_.Name -match 'v(\d+(\.\d+)+)') {
-                    [version]$matches[1]
-                }
-                else {
-                    [version]"0.0"
-                }
-            } -Descending |
-            Select-Object -First 1
+        if ($scripts) {
 
-        return $latest
+            $latest = $scripts |
+                Sort-Object {
+                    if ($_.Name -match 'v(\d+(\.\d+)+)') {
+                        [version]$matches[1]
+                    }
+                    else {
+                        [version]"0.0"
+                    }
+                } -Descending |
+                Select-Object -First 1
+
+            return $latest
+        }
+
+        # Fallback to non-versioned file
+        $baseFile = Join-Path $currentPath "${BaseName}.ps1"
+
+        if (Test-Path $baseFile) {
+            return Get-Item $baseFile
+        }
     }
 
-    # Fallback to non-versioned file
-    $baseFile = Join-Path $Path "${BaseName}.ps1"
-
-    if (Test-Path $baseFile) {
-        return Get-Item $baseFile
-    }
-
-    throw "No matching versioned or base script found for '$BaseName' in '$Path'."
+    throw "No matching versioned or base script found for '$BaseName' in paths: $($Path -join ', ')"
 }
-
 try {
 
     $script = Get-LatestVersionedScript -BaseName "NamedPipe_Client"
@@ -53,7 +55,7 @@ try {
 }
 catch {
 
-    Write-Host "Failed to load latest NamedPipe_Client."
+    Write-Host "Failed to load latest GZDoom_PipeAPI."
     Write-Host $_
     exit 1
 
@@ -162,8 +164,7 @@ $Global:GZDoom_PipeAPI_CMD_CVAR_GET_Response_Fault_Undeclared_Match_Pattern = '^
 $Global:CMD_CVAR_GET_ReadData_SuccessResponse_Match_Pattern = '^\s*"(.*?)"\s+is\s+"(.*?)"\s*$'
 function GZDoom_PipeAPI_CVAR_GET {
     param (
-        [Parameter(Mandatory)]
-        [string]$cvarName
+        $cvarName
     )
     #Returns bool $true (remote value was read and local value updated successfully) or $false (remote value was not read or local value not updated)
 	if ($Global:GZDoom_PipeAPI_Debug) { Write-Host "[GZDoom_PipeAPI_CVAR_GET]: CVAR: $cvarName" }
@@ -175,6 +176,7 @@ function GZDoom_PipeAPI_CVAR_GET {
 		Write-Host "[GZDoom_PipeAPI_CVAR_GET]: FAULT - empty cvarName" -ForegroundColor Red
 		return $false
 	}
+	$cvarName = [string]$cvarName
 	# Form Request String
 	$GZDoom_PipeAPI_GET_Request_String = $Global:GZDoom_PipeAPI_CMD_CVAR_GET_Request_Format
     $GZDoom_PipeAPI_GET_Request_String = $GZDoom_PipeAPI_GET_Request_String.Replace('cvarName', $cvarName)
@@ -262,10 +264,8 @@ $Global:GZDoom_PipeAPI_CMD_CVAR_SET_Response_Fault_Uncreatable_String = 'SET: CV
 $Global:GZDoom_PipeAPI_CMD_CVAR_SET_Response_Fault_ReadOnly_String = 'SET: CVar is read-only'
 function GZDoom_PipeAPI_CVAR_SET {
     param (
-        [Parameter(Mandatory)]
-        [string]$cvarName,
-		[Parameter(Mandatory)]
-        [string]$cvarValue
+        $cvarName,
+		$cvarValue
     )
     #Returns bool $true (remote value was updated successfully) or $false (remote value was not updated)
 	if ($Global:GZDoom_PipeAPI_Debug) { Write-Host "[GZDoom_PipeAPI_CVAR_SET]: CVAR: $($cvarName) ; Value: $($cvarValue)" }
@@ -283,7 +283,8 @@ function GZDoom_PipeAPI_CVAR_SET {
 		Write-Host "[GZDoom_PipeAPI_CVAR_SET]: FAULT - empty cvarValue" -ForegroundColor Red
 		return $false
 	}
-	
+	$cvarName = [string]$cvarName
+	$cvarValue = [string]$cvarValue
 	# Form Request String
 	# encapsulate string data with spaces in double quotes
 	if ($cvarValue.Contains(" ") -and $cvarValue -notmatch '^".*"$') {
@@ -388,8 +389,7 @@ $Global:GZDoom_PipeAPI_CMD_CONSOLE_COMMAND_ParseResponse_RegEx = '^Executing Com
 #JST: change back to Prefix so that we can have a mixed set of single quotes and double quotes
 function GZDoom_PipeAPI_CONSOLE_COMMAND {
     param (
-        [Parameter(Mandatory)]
-        [string]$commandString
+        $commandString
     )
 	if ($Global:GZDoom_PipeAPI_Debug) { Write-Host "[GZDoom_PipeAPI_CONSOLE_COMMAND]: Command: $($commandString)" }
 	# Request format - Client: COMMAND <console command string> -> Server: Executing Command: "<console command string>"
@@ -401,6 +401,7 @@ function GZDoom_PipeAPI_CONSOLE_COMMAND {
 		Write-Host "[GZDoom_PipeAPI_CONSOLE_COMMAND]: FAULT - empty commandString" -ForegroundColor Red
 		return $false
 	}
+	$commandString = [string]$commandString
 	$GZDoom_PipeAPI_CONSOLE_COMMAND_Request_String = $Global:GZDoom_PipeAPI_CMD_CONSOLE_COMMAND_Request_Format
     $GZDoom_PipeAPI_CONSOLE_COMMAND_Request_String = $GZDoom_PipeAPI_CONSOLE_COMMAND_Request_String.Replace('consoleCommandString', $commandString)
     if ($Global:GZDoom_PipeAPI_Debug) { Write-Host "[GZDoom_PipeAPI_CONSOLE_COMMAND]: Request String: $($GZDoom_PipeAPI_CONSOLE_COMMAND_Request_String)" }
