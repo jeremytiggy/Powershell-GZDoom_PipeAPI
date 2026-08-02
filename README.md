@@ -2,7 +2,7 @@
  - Windows Powershell library for interfacing with External-Pipe modded GZDoom
  - These give you access to the GET, SET, and COMMAND instructions as defined in externalpipe.cpp/.h
  - This is the heart of the data transfer
- - Requires WindowsIPCNamedPipeClient.ps1 as a library.
+ - Requires PowerShell-NamedPipe_Client as a library.
 
 ## Functions
  - GZDoom_API_CVAR_GET()
