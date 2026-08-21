@@ -65,10 +65,22 @@ catch {
 
 }
 GZDoom_PipeAPI_loaded
+# Windows IPC Named Pipe Client Definitions ---------------------------------
+# Global Variables
 # Pipe Parameters
-$Global:NamedPipe_Server_Name = 'GZD'
-$Global:NamedPipe_Server_Process = 'GZDoom'
-$Global:NamedPipe_Server_ResponseDelay = 28 #milliseconds
+$Global:NamedPipe_Client_AvailablePipeSelection_Filter = $true
+$Global:NamedPipe_Client_AutomaticallySelectUniqueFilteredPipeServerName = $true
+$Global:NamedPipe_Client_AvailablePipeSelection_NamePattern = '^[ZUG]ZD(_\d+)?$'
+$Global:NamedPipe_Server_Name = 'Select' # can be replaced with actual pipe name if known/static
+$Global:NamedPipe_Server_Process = 'Process'
+$Global:NamedPipe_Server_ResponseDelay = 57 #milliseconds
+$Global:NamedPipe_Server_ResponseTimeLimit = 5000 #milliseconds
+# Pipe Communications Variables
+$Global:NamedPipe_Client_ConnectedToServer = $false
+$Global:NamedPipe_Server_Data = ''
+$Global:NamedPipe_Server_Data_available = $false
+$Global:NamedPipe_Client_Data = ''
+$Global:NamedPipe_Client_Debug = $false
 $Global:NamedPipe_Client_Debug = $true
 #GZDoom API Parameters
 $Global:GZDoom_PipeAPI_Debug = $true
@@ -79,9 +91,9 @@ Write-Host "`n[Startup]: Starting communications..." -ForegroundColor Green
 NamedPipe_Client_Startup
 # Communication Status After Startups
 if ($Global:NamedPipe_Client_ConnectedToServer) {
-    Write-Host "[Startup]: Named Pipe Client connected to GZDoom." -ForegroundColor Green
+    Write-Host "[Startup]: Named Pipe Client connected to ZDoom." -ForegroundColor Green
 } else {
-    Write-Host "[Startup]: Named Pipe Client not connected to GZDoom." -ForegroundColor Yellow
+    Write-Host "[Startup]: Named Pipe Client not connected to ZDoom." -ForegroundColor Yellow
 }
 Write-Host "[Startup]: Starting main loop..." -ForegroundColor White
 try {
