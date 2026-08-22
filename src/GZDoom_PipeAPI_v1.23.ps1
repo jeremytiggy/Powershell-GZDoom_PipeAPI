@@ -90,9 +90,56 @@ Write-Host "[GZDoom_PipeAPI] Library Loading..." -ForegroundColor Gray
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------------
 # GZDoom API ---------------------------------
+# GZDoom External-Pipe Connection
+$Global:NamedPipe_Server_Name = 'Select'
+$Global:NamedPipe_Client_AvailablePipeSelection_Filter = $true
+$Global:NamedPipe_Client_AutomaticallySelectUniqueFilteredPipeServerName = $true
+$Global:NamedPipe_Client_AvailablePipeSelection_NamePattern = '^[ZUG]ZD(_\d+)?$'
+$Global:NamedPipe_Server_Process = 'ZDoom'
+function GZDoom_PipeAPI_AutoConnect {
+	# enforce filtering & autoselection
+	$Global:NamedPipe_Server_Name = 'Select'
+	$Global:NamedPipe_Client_AvailablePipeSelection_Filter = $true
+	$Global:NamedPipe_Client_AutomaticallySelectUniqueFilteredPipeServerName = $true
+	$Global:NamedPipe_Client_AvailablePipeSelection_NamePattern = '^[ZUG]ZD(_\d+)?$'
+	$Global:NamedPipe_Server_Process = 'ZDoom'
+	# Check if one of the three supported processes is running
+	$numberOfKnownZDoomProcessesRunning = 0
+	$Server_Process = $Global:NamedPipe_Server_Process
+	$NamePattern = '^[ZUG]ZD(_\d+)?$'
+	# gzdoom
+	if (NamedPipe_Client_ProcessRunning "gzdoom") {
+		$numberOfKnownZDoomProcessesRunning += 1
+		$runningProcess = "gzdoom"
+		$NamePattern = '^[G]ZD(_\d+)?$'
+	}
+	# uzdoom
+	if (NamedPipe_Client_ProcessRunning "uzdoom") {
+		$numberOfKnownZDoomProcessesRunning += 1
+		$runningProcess = "uzdoom"
+		$NamePattern = '^[U]ZD(_\d+)?$'
+	}
+	#zandronum
+	if (NamedPipe_Client_ProcessRunning "zandronum") {
+		$numberOfKnownZDoomProcessesRunning += 1
+		$runningProcess = "zandronum"
+		$NamePattern = '^[Z]ZD(_\d+)?$'
+	}
+	# if one or more of them is running, 
+	if ($numberOfKnownZDoomProcessesRunning -ge 1) {
+		if ($numberOfKnownZDoomProcessesRunning -eq 1) {
+			Write-Host "[GZDoom_PipeAPI_Connect]: $($runningProcess) is running :-)" -ForegroundColor Green
+			$Global:NamedPipe_Server_Process = $runningProcess
+		} else if ($numberOfKnownZDoomProcessesRunning -ge 2) {
+			Write-Host "[GZDoom_PipeAPI_Connect]: $($runningProcess) multiple ports of DOOM are running O_o" -ForegroundColor Yellow 
+		}		
+	} else if ($numberOfKnownZDoomProcessesRunning -le 0) {
+		Write-Host "[GZDoom_PipeAPI_Connect]: $($runningProcess) no supported DOOM ports are running at the moment :(" -ForegroundColor Red
+	}
+	NamedPipe_Client_Startup
+}
 
 # GZDoom External-Pipe API Console Command Formatting Functions (from externalpipe.h/.cpp) ----------------
-
 $Global:GZDoom_PipeAPI_CMD_CVAR_Name = ''
 $Global:GZDoom_PipeAPI_CMD_CVAR_Value_String = ''
 # In order to properly store and parse CVAR values, we use prefixes to indicate data types.
